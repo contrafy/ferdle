@@ -1,21 +1,25 @@
 {
   "images" : [
     {
+      "filename" : "SettingsIcon@2x.png",
       "idiom" : "iphone",
       "scale" : "2x",
       "size" : "29x29"
     },
     {
+      "filename" : "SettingsIcon@3x.png",
       "idiom" : "iphone",
       "scale" : "3x",
       "size" : "29x29"
     },
     {
+      "filename" : "MessagesIcon@2x.png",
       "idiom" : "iphone",
       "scale" : "2x",
       "size" : "60x45"
     },
     {
+      "filename" : "MessagesIcon@3x.png",
       "idiom" : "iphone",
       "scale" : "3x",
       "size" : "60x45"
@@ -36,6 +40,7 @@
       "size" : "74x55"
     },
     {
+      "filename" : "ferdle-iOS-Default-1024x1024@1x 7.png",
       "idiom" : "ios-marketing",
       "scale" : "1x",
       "size" : "1024x1024"

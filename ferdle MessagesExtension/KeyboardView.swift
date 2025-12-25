@@ -68,7 +68,7 @@ struct KeyboardView: View {
                 }) {
                     RoundedRectangle(cornerRadius: 6)
                         .fill(Color.gray.opacity(0.2))
-                        .frame(height: 42)
+                        .frame(height: 46)
                 }
 
                 // DELETE key
@@ -76,8 +76,9 @@ struct KeyboardView: View {
                     viewModel.handleKeyPress("DELETE")
                 }
             }
+            .padding(.horizontal, 8)
         }
-        .padding()
+        .padding(.top, 12)
         .glassBackground()
     }
 }
@@ -90,9 +91,9 @@ struct KeyButton: View {
     var body: some View {
         Button(action: action) {
             Text(label)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(textColor)
-                .frame(width: 32, height: 42)
+                .frame(width: 32, height: 46)
                 .background(backgroundColor)
                 .cornerRadius(6)
         }
@@ -127,12 +128,21 @@ struct SpecialKeyButton: View {
 
     var body: some View {
         Button(action: action) {
-            Text(label)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(.primary)
-                .frame(width: 55, height: 42)
-                .background(Color.gray.opacity(0.3))
-                .cornerRadius(6)
+            if label == "⌫" {
+                Image(systemName: "delete.left")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundColor(.primary)
+                    .frame(width: 50, height: 46)
+                    .background(Color.gray.opacity(0.3))
+                    .cornerRadius(6)
+            } else {
+                Text(label)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.primary)
+                    .frame(width: 50, height: 46)
+                    .background(Color.gray.opacity(0.3))
+                    .cornerRadius(6)
+            }
         }
     }
 }

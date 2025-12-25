@@ -288,6 +288,13 @@ class GameViewModel: ObservableObject {
         GamePersistence.clear()
     }
 
+    /// Resets the game to a fresh state.
+    func resetGame() {
+        clearPersistedState()
+        resetBoard()
+        gamePhase = .playing
+    }
+
     // MARK: - Helpers
 
     private func resetBoard() {

@@ -34,6 +34,9 @@ class MessagesViewController: MSMessagesAppViewController {
             presentationStylePublisher: presentationStyleSubject.eraseToAnyPublisher(),
             onShare: { [weak self] summary in
                 self?.insertSummaryText(summary)
+            },
+            onRequestExpansion: { [weak self] in
+                self?.requestPresentationStyle(.expanded)
             }
         )
 

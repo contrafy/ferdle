@@ -22,6 +22,7 @@ struct BoardView: View {
             }
         }
         .padding(isCompact ? 8 : 16)
+        .frame(maxWidth: .infinity)
     }
 }
 

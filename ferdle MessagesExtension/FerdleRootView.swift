@@ -14,9 +14,11 @@ struct FerdleRootView: View {
     @State private var loadingState: LoadingState = .loading
     @State private var errorMessage: String?
     @State private var isCompact: Bool = false
+    @State private var isTransitioning: Bool = false
 
     let presentationStylePublisher: AnyPublisher<MSMessagesAppPresentationStyle, Never>
     let onShare: (String) -> Void
+    let onRequestExpansion: () -> Void
 
     enum LoadingState {
         case loading
@@ -32,7 +34,18 @@ struct FerdleRootView: View {
                     .font(.headline)
 
             case .loaded:
-                MainGameView(viewModel: viewModel, isCompact: isCompact, onShare: onShare)
+                MainGameView(
+                    viewModel: viewModel,
+                    isCompact: isCompact,
+                    isTransitioning: isTransitioning,
+                    onShare: onShare
+                )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if isCompact {
+                        onRequestExpansion()
+                    }
+                }
 
             case .error:
                 VStack(spacing: 20) {
@@ -69,7 +82,30 @@ struct FerdleRootView: View {
             loadPuzzle()
         }
         .onReceive(presentationStylePublisher) { style in
-            isCompact = (style == .compact)
+            let targetCompact = (style == .compact)
+
+            // Only handle transitions when state actually changes
+            guard targetCompact != isCompact else { return }
+
+            if targetCompact {
+                // Transitioning to compact - hide keyboard immediately
+                isTransitioning = true
+                // Then complete the compact transition
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    isCompact = true
+                    isTransitioning = false
+                }
+            } else {
+                // Transitioning to expanded - keep keyboard hidden during transition
+                isTransitioning = true
+                isCompact = false
+                // Show keyboard almost immediately (very brief delay for transition to start)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    withAnimation(.easeIn(duration: 0.1)) {
+                        isTransitioning = false
+                    }
+                }
+            }
         }
     }
 
