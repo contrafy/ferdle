@@ -35,7 +35,8 @@ struct FerdleRootView: View {
                 case .loaded:
                     MainGameView(
                         viewModel: viewModel,
-                        onShare: onShare
+                        onShare: onShare,
+                        onRequestExpansion: onRequestExpansion
                     )
                     .contentShape(Rectangle())
                     .onTapGesture {

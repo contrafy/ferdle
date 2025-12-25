@@ -12,6 +12,7 @@ import Combine
 struct MainGameView: View {
     @ObservedObject var viewModel: GameViewModel
     let onShare: (String) -> Void
+    let onRequestExpansion: () -> Void
 
     var body: some View {
         GeometryReader { geometry in
@@ -48,23 +49,25 @@ struct MainGameView: View {
                 // Game end overlay
                 if showDialog {
                     ZStack {
-                        // Translucent background when space constrained
-                        Color.black.opacity(isSpaceConstrained ? 0.3 : 0.0)
+                        // Translucent background over the game grid
+                        Color.black.opacity(0.4)
                             .edgesIgnoringSafeArea(.all)
-                            .animation(.easeInOut(duration: 0.3), value: isSpaceConstrained)
 
                         // Dialog - sized to fit available space
                         GameEndView(
                             viewModel: viewModel,
                             onShare: onShare,
+                            onRequestExpansion: onRequestExpansion,
                             availableWidth: geometry.size.width,
                             availableHeight: availableHeight
                         )
                     }
                     .transition(.opacity)
+                    .animation(.easeInOut(duration: 0.3), value: showDialog)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .animation(.easeInOut(duration: 0.3), value: showKeyboard)
         }
     }
 }
@@ -88,6 +91,7 @@ struct CompactOverlay: View {
 struct GameEndView: View {
     @ObservedObject var viewModel: GameViewModel
     let onShare: (String) -> Void
+    let onRequestExpansion: () -> Void
     let availableWidth: CGFloat
     let availableHeight: CGFloat
     @State private var timeUntilMidnight: String = ""
@@ -196,5 +200,9 @@ struct GameEndView: View {
 
     private func resetGame() {
         viewModel.resetGame()
+        // Request expansion if in compact mode
+        if availableHeight < 400 {
+            onRequestExpansion()
+        }
     }
 }

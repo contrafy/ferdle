@@ -8,7 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		4F4B16082EFC90C6000CFA87 /* ferdle MessagesExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4F4B16072EFC90C6000CFA87 /* ferdle MessagesExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		4F4B160D2EFC90C6000CFA87 /* Messages.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F4B160C2EFC90C6000CFA87 /* Messages.framework */; };
+		4F4B16332EFD1926000CFA87 /* Messages.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F4B160C2EFC90C6000CFA87 /* Messages.framework */; };
+		4F4B16342EFD1926000CFA87 /* Messages.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 4F4B160C2EFC90C6000CFA87 /* Messages.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -31,6 +32,17 @@
 				4F4B16082EFC90C6000CFA87 /* ferdle MessagesExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4F4B16352EFD1926000CFA87 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				4F4B16342EFD1926000CFA87 /* Messages.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -72,7 +84,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4F4B160D2EFC90C6000CFA87 /* Messages.framework in Frameworks */,
+				4F4B16332EFD1926000CFA87 /* Messages.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -138,6 +150,7 @@
 				4F4B16032EFC90C6000CFA87 /* Sources */,
 				4F4B16042EFC90C6000CFA87 /* Frameworks */,
 				4F4B16052EFC90C6000CFA87 /* Resources */,
+				4F4B16352EFD1926000CFA87 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -243,7 +256,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = araaiyan.ferdle.MessagesExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -272,7 +285,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = araaiyan.ferdle.MessagesExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
