@@ -3,6 +3,7 @@
 //  ferdle MessagesExtension
 //
 //  Main game UI composition: BoardView + KeyboardView + end-game overlay.
+//  Uses dynamic layout based on available screen space.
 //
 
 import SwiftUI
@@ -10,55 +11,61 @@ import Combine
 
 struct MainGameView: View {
     @ObservedObject var viewModel: GameViewModel
-    let isCompact: Bool
-    let isTransitioning: Bool
     let onShare: (String) -> Void
 
     var body: some View {
-        let showDialog = viewModel.gamePhase == .won || viewModel.gamePhase == .lost
-        let hideKeyboard = isCompact || isTransitioning || showDialog
+        GeometryReader { geometry in
+            let availableHeight = geometry.size.height
+            let showDialog = viewModel.gamePhase == .won || viewModel.gamePhase == .lost
 
-        ZStack {
-            // Main layout - board and keyboard stacked vertically
-            VStack(spacing: 0) {
-                // Board - centered in available space
-                Spacer()
-                BoardView(viewModel: viewModel, isCompact: isCompact)
-                Spacer()
+            // Determine layout based on available space
+            // If we have less than 400pt height, we're in compact mode
+            let isSpaceConstrained = availableHeight < 400
+            let showKeyboard = !isSpaceConstrained && !showDialog
 
-                // Keyboard area - hide when dialog is showing or in compact/transitioning
-                if !hideKeyboard {
-                    KeyboardView(viewModel: viewModel)
+            ZStack {
+                // Main layout - board and keyboard stacked vertically
+                VStack(spacing: 0) {
+                    // Board - centered in available space
+                    Spacer(minLength: 0)
+                    BoardView(viewModel: viewModel, availableHeight: showKeyboard ? availableHeight - 220 : availableHeight)
+                    Spacer(minLength: 0)
+
+                    // Keyboard area - pinned to bottom
+                    if showKeyboard {
+                        KeyboardView(viewModel: viewModel)
+                            .transition(.opacity)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+
+                // Show overlay when space is constrained and no dialog
+                if isSpaceConstrained && !showDialog {
+                    CompactOverlay()
                         .transition(.opacity)
                 }
-            }
 
-            // Compact mode overlay with Play/Resume button (hidden when dialog showing)
-            if isCompact && !showDialog {
-                CompactOverlay()
-            }
-
-            // Game end overlay
-            if showDialog {
-                ZStack {
-                    if isCompact {
-                        // Translucent background in compact mode
-                        Color.black.opacity(0.3)
+                // Game end overlay
+                if showDialog {
+                    ZStack {
+                        // Translucent background when space constrained
+                        Color.black.opacity(isSpaceConstrained ? 0.3 : 0.0)
                             .edgesIgnoringSafeArea(.all)
-                    }
+                            .animation(.easeInOut(duration: 0.3), value: isSpaceConstrained)
 
-                    if isCompact {
-                        // In compact mode, show dialog with padding for translucent background
-                        GameEndView(viewModel: viewModel, onShare: onShare)
-                            .padding(16)
-                    } else {
-                        // In expanded mode, show dialog normally
-                        GameEndView(viewModel: viewModel, onShare: onShare)
+                        // Dialog - sized to fit available space
+                        GameEndView(
+                            viewModel: viewModel,
+                            onShare: onShare,
+                            availableWidth: geometry.size.width,
+                            availableHeight: availableHeight
+                        )
                     }
+                    .transition(.opacity)
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -81,13 +88,21 @@ struct CompactOverlay: View {
 struct GameEndView: View {
     @ObservedObject var viewModel: GameViewModel
     let onShare: (String) -> Void
+    let availableWidth: CGFloat
+    let availableHeight: CGFloat
     @State private var timeUntilMidnight: String = ""
     @State private var isNewWordAvailable: Bool = false
 
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        VStack(spacing: 20) {
+        // Calculate responsive sizing
+        let isCompact = availableHeight < 400
+        let contentPadding: CGFloat = isCompact ? 20 : 32
+        let outerPadding: CGFloat = isCompact ? 16 : 40
+        let maxDialogWidth: CGFloat = min(availableWidth - (outerPadding * 2), 400)
+
+        VStack(spacing: isCompact ? 12 : 20) {
             // Header with Reset button and Timer
             HStack {
                 Button(action: resetGame) {
@@ -105,19 +120,21 @@ struct GameEndView: View {
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(isNewWordAvailable ? .green : .secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
-            .padding(.bottom, 8)
+            .padding(.bottom, isCompact ? 4 : 8)
 
             Text(viewModel.gamePhase == .won ? "You Won!" : "Game Over")
-                .font(.largeTitle)
+                .font(isCompact ? .title : .largeTitle)
                 .fontWeight(.bold)
 
             if viewModel.gamePhase == .lost {
-                VStack(spacing: 8) {
+                VStack(spacing: isCompact ? 4 : 8) {
                     Text("The word was:")
-                        .font(.headline)
+                        .font(isCompact ? .subheadline : .headline)
                     Text(viewModel.solution)
-                        .font(.title)
+                        .font(isCompact ? .title2 : .title)
                         .fontWeight(.bold)
                         .foregroundColor(Color(red: 0.42, green: 0.64, blue: 0.31))
                 }
@@ -131,21 +148,22 @@ struct GameEndView: View {
                     Image(systemName: "square.and.arrow.up")
                     Text("Share Results")
                 }
-                .font(.headline)
+                .font(isCompact ? .body : .headline)
                 .foregroundColor(.white)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
+                .padding(.horizontal, isCompact ? 20 : 24)
+                .padding(.vertical, isCompact ? 10 : 12)
                 .background(Color.blue)
                 .cornerRadius(12)
             }
         }
-        .padding(32)
+        .padding(contentPadding)
+        .frame(maxWidth: maxDialogWidth)
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color(UIColor.systemBackground))
                 .shadow(radius: 20)
         )
-        .padding(40)
+        .padding(outerPadding)
         .onAppear(perform: updateTimer)
         .onReceive(timer) { _ in
             updateTimer()

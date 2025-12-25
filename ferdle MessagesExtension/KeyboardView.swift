@@ -39,6 +39,7 @@ struct KeyboardView: View {
                     }
                 }
             }
+            .frame(maxWidth: .infinity)
 
             // Bottom row with letters only
             HStack(spacing: 4) {
@@ -51,6 +52,7 @@ struct KeyboardView: View {
                     }
                 }
             }
+            .frame(maxWidth: .infinity)
 
             // Bottom row: ENTER | SPACE (wide) | BACKSPACE
             HStack(spacing: 4) {
@@ -76,9 +78,10 @@ struct KeyboardView: View {
                     viewModel.handleKeyPress("DELETE")
                 }
             }
-            .padding(.horizontal, 8)
+            .frame(maxWidth: .infinity)
         }
         .padding(.top, 12)
+        .padding(.horizontal, 12)
         .glassBackground()
     }
 }

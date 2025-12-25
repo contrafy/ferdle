@@ -13,8 +13,6 @@ struct FerdleRootView: View {
     @StateObject private var viewModel = GameViewModel()
     @State private var loadingState: LoadingState = .loading
     @State private var errorMessage: String?
-    @State private var isCompact: Bool = false
-    @State private var isTransitioning: Bool = false
 
     let presentationStylePublisher: AnyPublisher<MSMessagesAppPresentationStyle, Never>
     let onShare: (String) -> Void
@@ -27,25 +25,25 @@ struct FerdleRootView: View {
     }
 
     var body: some View {
-        ZStack {
-            switch loadingState {
-            case .loading:
-                ProgressView("Loading today's puzzle...")
-                    .font(.headline)
+        GeometryReader { geometry in
+            ZStack {
+                switch loadingState {
+                case .loading:
+                    ProgressView("Loading today's puzzle...")
+                        .font(.headline)
 
-            case .loaded:
-                MainGameView(
-                    viewModel: viewModel,
-                    isCompact: isCompact,
-                    isTransitioning: isTransitioning,
-                    onShare: onShare
-                )
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    if isCompact {
-                        onRequestExpansion()
+                case .loaded:
+                    MainGameView(
+                        viewModel: viewModel,
+                        onShare: onShare
+                    )
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        // Request expansion when in compact mode (height < 400)
+                        if geometry.size.height < 400 {
+                            onRequestExpansion()
+                        }
                     }
-                }
 
             case .error:
                 VStack(spacing: 20) {
@@ -76,35 +74,10 @@ struct FerdleRootView: View {
                     }
                 }
                 .padding()
+                }
             }
-        }
-        .onAppear {
-            loadPuzzle()
-        }
-        .onReceive(presentationStylePublisher) { style in
-            let targetCompact = (style == .compact)
-
-            // Only handle transitions when state actually changes
-            guard targetCompact != isCompact else { return }
-
-            if targetCompact {
-                // Transitioning to compact - hide keyboard immediately
-                isTransitioning = true
-                // Then complete the compact transition
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    isCompact = true
-                    isTransitioning = false
-                }
-            } else {
-                // Transitioning to expanded - keep keyboard hidden during transition
-                isTransitioning = true
-                isCompact = false
-                // Show keyboard almost immediately (very brief delay for transition to start)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                    withAnimation(.easeIn(duration: 0.1)) {
-                        isTransitioning = false
-                    }
-                }
+            .onAppear {
+                loadPuzzle()
             }
         }
     }
