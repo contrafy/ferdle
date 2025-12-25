@@ -230,7 +230,10 @@ class GameViewModel: ObservableObject {
 
         // Top line: "Wordle {days_since_launch} {attempts}/6"
         let attempts = gamePhase == .won ? String(submittedRowsCount) : "X"
-        lines.append("Wordle \(daysSinceLaunch) \(attempts)/6")
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        let formattedDays = formatter.string(from: NSNumber(value: daysSinceLaunch)) ?? String(daysSinceLaunch)
+        lines.append("Wordle \(formattedDays) \(attempts)/6")
 
         // Blank line
         lines.append("")

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MainGameView: View {
     @ObservedObject var viewModel: GameViewModel
+    let isCompact: Bool
     let onShare: (String) -> Void
 
     var body: some View {
@@ -16,15 +17,17 @@ struct MainGameView: View {
             VStack(spacing: 0) {
                 // Board
                 Spacer()
-                BoardView(viewModel: viewModel)
+                BoardView(viewModel: viewModel, isCompact: isCompact)
                 Spacer()
 
-                // Keyboard
-                KeyboardView(viewModel: viewModel)
+                // Keyboard (hidden in compact mode)
+                if !isCompact {
+                    KeyboardView(viewModel: viewModel)
+                }
             }
 
-            // Game end overlay
-            if viewModel.gamePhase == .won || viewModel.gamePhase == .lost {
+            // Game end overlay (hidden in compact mode)
+            if !isCompact && (viewModel.gamePhase == .won || viewModel.gamePhase == .lost) {
                 GameEndView(viewModel: viewModel, onShare: onShare)
             }
         }

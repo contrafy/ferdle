@@ -40,13 +40,8 @@ struct KeyboardView: View {
                 }
             }
 
-            // Bottom row
+            // Bottom row with letters only
             HStack(spacing: 4) {
-                // ENTER key
-                SpecialKeyButton(label: "ENTER") {
-                    viewModel.handleKeyPress("ENTER")
-                }
-
                 ForEach(bottomRow, id: \.self) { letter in
                     KeyButton(
                         label: String(letter),
@@ -55,25 +50,32 @@ struct KeyboardView: View {
                         viewModel.handleKeyPress(String(letter))
                     }
                 }
+            }
+
+            // Bottom row: ENTER | SPACE (wide) | BACKSPACE
+            HStack(spacing: 4) {
+                // ENTER key
+                SpecialKeyButton(label: "ENTER") {
+                    viewModel.handleKeyPress("ENTER")
+                }
+
+                // Space bar (wide, in the middle)
+                Button(action: {
+                    // For MVP, space bar can trigger submit when 5 letters are present
+                    if viewModel.currentColIndex == 5 {
+                        viewModel.handleKeyPress("ENTER")
+                    }
+                }) {
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(height: 42)
+                }
 
                 // DELETE key
                 SpecialKeyButton(label: "⌫") {
                     viewModel.handleKeyPress("DELETE")
                 }
             }
-
-            // Space bar (wide, minimal for MVP)
-            Button(action: {
-                // For MVP, space bar can trigger submit when 5 letters are present
-                if viewModel.currentColIndex == 5 {
-                    viewModel.handleKeyPress("ENTER")
-                }
-            }) {
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color.gray.opacity(0.2))
-                    .frame(height: 40)
-            }
-            .padding(.horizontal, 4)
         }
         .padding()
         .glassBackground()
@@ -103,9 +105,9 @@ struct KeyButton: View {
         case .miss:
             return Color.gray.opacity(0.5)
         case .present:
-            return Color.yellow
+            return Color(red: 0.72, green: 0.65, blue: 0.26) // Darker, duller yellow
         case .correct:
-            return Color.green
+            return Color(red: 0.42, green: 0.64, blue: 0.31) // Darker, duller green
         }
     }
 

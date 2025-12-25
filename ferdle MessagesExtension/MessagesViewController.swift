@@ -8,10 +8,12 @@
 import UIKit
 import Messages
 import SwiftUI
+import Combine
 
 class MessagesViewController: MSMessagesAppViewController {
 
     private var hostingController: UIHostingController<FerdleRootView>?
+    private let presentationStyleSubject = PassthroughSubject<MSMessagesAppPresentationStyle, Never>()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -27,10 +29,13 @@ class MessagesViewController: MSMessagesAppViewController {
     // MARK: - SwiftUI Hosting
 
     private func setupSwiftUIHost() {
-        // Create the SwiftUI root view with share callback
-        let rootView = FerdleRootView { [weak self] summary in
-            self?.insertSummaryText(summary)
-        }
+        // Create the SwiftUI root view with share callback and presentation style publisher
+        let rootView = FerdleRootView(
+            presentationStylePublisher: presentationStyleSubject.eraseToAnyPublisher(),
+            onShare: { [weak self] summary in
+                self?.insertSummaryText(summary)
+            }
+        )
 
         let hosting = UIHostingController(rootView: rootView)
         hostingController = hosting
@@ -56,9 +61,12 @@ class MessagesViewController: MSMessagesAppViewController {
     private func insertSummaryText(_ summary: String) {
         guard let conversation = activeConversation else { return }
 
-        conversation.insertText(summary) { error in
+        conversation.insertText(summary) { [weak self] error in
             if let error = error {
                 print("Error inserting text: \(error.localizedDescription)")
+            } else {
+                // Collapse the extension after sharing
+                self?.requestPresentationStyle(.compact)
             }
         }
     }
@@ -71,5 +79,10 @@ class MessagesViewController: MSMessagesAppViewController {
 
     override func didResignActive(with conversation: MSConversation) {
         // Extension is resigning - state is persisted automatically by GameViewModel
+    }
+
+    override func didTransition(to presentationStyle: MSMessagesAppPresentationStyle) {
+        // Notify SwiftUI of presentation style changes
+        presentationStyleSubject.send(presentationStyle)
     }
 }

@@ -6,12 +6,16 @@
 //
 
 import SwiftUI
+import Messages
+import Combine
 
 struct FerdleRootView: View {
     @StateObject private var viewModel = GameViewModel()
     @State private var loadingState: LoadingState = .loading
     @State private var errorMessage: String?
+    @State private var isCompact: Bool = false
 
+    let presentationStylePublisher: AnyPublisher<MSMessagesAppPresentationStyle, Never>
     let onShare: (String) -> Void
 
     enum LoadingState {
@@ -28,7 +32,7 @@ struct FerdleRootView: View {
                     .font(.headline)
 
             case .loaded:
-                MainGameView(viewModel: viewModel, onShare: onShare)
+                MainGameView(viewModel: viewModel, isCompact: isCompact, onShare: onShare)
 
             case .error:
                 VStack(spacing: 20) {
@@ -63,6 +67,9 @@ struct FerdleRootView: View {
         }
         .onAppear {
             loadPuzzle()
+        }
+        .onReceive(presentationStylePublisher) { style in
+            isCompact = (style == .compact)
         }
     }
 
