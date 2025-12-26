@@ -27,6 +27,7 @@ struct KeyboardView: View {
                     }
                 }
             }
+            .padding(.horizontal, 8)
 
             // Middle row
             HStack(spacing: 4) {
@@ -40,6 +41,7 @@ struct KeyboardView: View {
                 }
             }
             .frame(maxWidth: .infinity)
+            .padding(.horizontal, 12)
 
             // Bottom row with letters only
             HStack(spacing: 4) {
@@ -53,6 +55,7 @@ struct KeyboardView: View {
                 }
             }
             .frame(maxWidth: .infinity)
+            .padding(.horizontal, 16)
 
             // Bottom row: ENTER | SPACE (wide) | BACKSPACE
             HStack(spacing: 4) {
@@ -79,6 +82,7 @@ struct KeyboardView: View {
                 }
             }
             .frame(maxWidth: .infinity)
+            .padding(.horizontal, 8)
         }
         .padding(.top, 12)
         .padding(.horizontal, 12)
@@ -95,8 +99,8 @@ struct KeyButton: View {
         Button(action: action) {
             Text(label)
                 .font(.system(size: 18, weight: .semibold))
+                .frame(minWidth: 32, minHeight: 46)
                 .foregroundColor(textColor)
-                .frame(width: 32, height: 46)
                 .background(backgroundColor)
                 .cornerRadius(6)
         }

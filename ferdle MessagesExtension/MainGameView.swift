@@ -14,6 +14,8 @@ struct MainGameView: View {
     let onShare: (String) -> Void
     let onRequestExpansion: () -> Void
 
+    @State private var isResetting: Bool = false
+
     var body: some View {
         GeometryReader { geometry in
             let availableHeight = geometry.size.height
@@ -39,35 +41,55 @@ struct MainGameView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .zIndex(0)
 
-                // Show overlay when space is constrained and no dialog
-                if isSpaceConstrained && !showDialog {
+                // Show overlay when space is constrained and no dialog (but not when resetting)
+                if isSpaceConstrained && !showDialog && !isResetting {
                     CompactOverlay()
                         .transition(.opacity)
                 }
 
-                // Game end overlay
+                // Game end overlay with translucent background
                 if showDialog {
-                    ZStack {
-                        // Translucent background over the game grid
-                        Color.black.opacity(0.4)
-                            .edgesIgnoringSafeArea(.all)
-
-                        // Dialog - sized to fit available space
-                        GameEndView(
-                            viewModel: viewModel,
-                            onShare: onShare,
-                            onRequestExpansion: onRequestExpansion,
-                            availableWidth: geometry.size.width,
-                            availableHeight: availableHeight
-                        )
-                    }
-                    .transition(.opacity)
-                    .animation(.easeInOut(duration: 0.3), value: showDialog)
+                    
+                    // Dialog - sized to fit available space
+                    GameEndView(
+                        viewModel: viewModel,
+                        onShare: onShare,
+                        onRequestExpansion: onRequestExpansion,
+                        onReset: {
+                            handleReset(isCompact: isSpaceConstrained)
+                        },
+                        availableWidth: geometry.size.width,
+                        isCompact: isSpaceConstrained
+                    )
+                    // .transition(.opacity)
+                    .zIndex(2)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .animation(.easeInOut(duration: 0.3), value: showDialog)
             .animation(.easeInOut(duration: 0.3), value: showKeyboard)
+        }
+    }
+
+    private func handleReset(isCompact: Bool) {
+        if isCompact {
+            // Set resetting flag to prevent CompactOverlay flash
+            isResetting = true
+            // Request expansion first
+            onRequestExpansion()
+            // Reset after a brief delay to allow expansion to start
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                viewModel.resetGame()
+                // Clear resetting flag after expansion completes
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                    isResetting = false
+                }
+            }
+        } else {
+            // In expanded mode, reset immediately
+            viewModel.resetGame()
         }
     }
 }
@@ -92,24 +114,24 @@ struct GameEndView: View {
     @ObservedObject var viewModel: GameViewModel
     let onShare: (String) -> Void
     let onRequestExpansion: () -> Void
+    let onReset: () -> Void
     let availableWidth: CGFloat
-    let availableHeight: CGFloat
+    let isCompact: Bool
     @State private var timeUntilMidnight: String = ""
     @State private var isNewWordAvailable: Bool = false
 
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        // Calculate responsive sizing
-        let isCompact = availableHeight < 400
-        let contentPadding: CGFloat = isCompact ? 20 : 32
-        let outerPadding: CGFloat = isCompact ? 16 : 40
+        // Calculate responsive sizing - now uses stable isCompact flag
+        let contentPadding: CGFloat = 20
+        let outerPadding: CGFloat = 16
         let maxDialogWidth: CGFloat = min(availableWidth - (outerPadding * 2), 400)
 
-        VStack(spacing: isCompact ? 12 : 20) {
+        VStack(spacing: 20) {
             // Header with Reset button and Timer
             HStack {
-                Button(action: resetGame) {
+                Button(action: onReset) {
                     Image(systemName: "arrow.clockwise")
                         .font(.title2)
                         .foregroundColor(.primary)
@@ -127,18 +149,18 @@ struct GameEndView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
-            .padding(.bottom, isCompact ? 4 : 8)
+            .padding(.bottom, 8)
 
             Text(viewModel.gamePhase == .won ? "You Won!" : "Game Over")
-                .font(isCompact ? .title : .largeTitle)
+                .font(.title)
                 .fontWeight(.bold)
 
             if viewModel.gamePhase == .lost {
-                VStack(spacing: isCompact ? 4 : 8) {
+                VStack(spacing: 8) {
                     Text("The word was:")
-                        .font(isCompact ? .subheadline : .headline)
+                        .font(.subheadline)
                     Text(viewModel.solution)
-                        .font(isCompact ? .title2 : .title)
+                        .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(Color(red: 0.42, green: 0.64, blue: 0.31))
                 }
@@ -152,10 +174,10 @@ struct GameEndView: View {
                     Image(systemName: "square.and.arrow.up")
                     Text("Share Results")
                 }
-                .font(isCompact ? .body : .headline)
+                .font(.headline)
                 .foregroundColor(.white)
-                .padding(.horizontal, isCompact ? 20 : 24)
-                .padding(.vertical, isCompact ? 10 : 12)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
                 .background(Color.blue)
                 .cornerRadius(12)
             }
@@ -195,14 +217,6 @@ struct GameEndView: View {
                 let seconds = Int(interval) % 60
                 timeUntilMidnight = String(format: "%d:%02d:%02d until new daily word", hours, minutes, seconds)
             }
-        }
-    }
-
-    private func resetGame() {
-        viewModel.resetGame()
-        // Request expansion if in compact mode
-        if availableHeight < 400 {
-            onRequestExpansion()
         }
     }
 }
